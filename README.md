@@ -1,65 +1,72 @@
-# Ersilia Model Template
+# Bioactivity Similarity Index (BSI)
 
-This document contains the instructions to incorporate a model. Please follow along to bring your model into the [Ersilia Model Hub](https://github.com/ersilia-os/ersilia). After successful incorporation of the model, this README file will be **automatically updated** to reflect model specific details.
+**Ersilia Model ID:** `eos0aaa`
 
-Further information about model incorporation can be found in our [Documentation](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/).
+| | |
+|---|---|
+| **Task** | Pairwise similarity prediction |
+| **Input** | Compound pair (two SMILES) |
+| **Output** | Score between 0 (dissimilar) and 1 (similar) |
+| **Framework** | PyTorch MLP on ECFP4 fingerprints |
+| **License** | MIT |
 
-## Template Structure
+## Description
 
-The model template is organized in two parts, namely the (a) model code and parameters, and (b) the metadata and installation instructions
+Predicts whether two compounds share similar bioactivity profiles based on their binding behavior to protein targets. The model uses ECFP4 fingerprints (256-bit Morgan radius 2) summed for compound pairs, fed through a deep neural network (512-256-128-64, ReLU, dropout 0.3) trained on ChEMBL-derived active-active (similar) and active-decoy (dissimilar) pairs with Tanimoto filtering.
 
-### The Model Folder
+The BSI-Large model is a general-purpose variant trained across all protein families, providing broad applicability at the cost of lower absolute scores compared to group-specific models.
 
-Generally, two important pieces make up a model that goes into the Ersilia Model Hub: (a) the model checkpoints and (b) the code to load those checkpoints and make predictions with that model (framework). With that in mind, the model folder is organised as follows:
+## Interpretation
 
+Higher scores indicate that the two compounds are more likely to share bioactivity profiles (i.e., bind similar protein targets). The model was trained with a Tanimoto threshold of 0.40 to avoid trivially similar pairs. Typical output range for BSI-Large is 0.05-0.30; scores above 0.20 suggest meaningful bioactivity overlap.
+
+## Source
+
+- **Publication:** [Schottlender et al., Front. Bioinform. 2025](https://www.frontiersin.org/journals/bioinformatics/articles/10.3389/fbinf.2025.1695353/full)
+- **Source Code:** https://github.com/gschottlender/bioactivity-similarity-index
+
+## Deep Validation
+
+| Check | Status | Details |
+|-------|--------|---------|
+| Distribution (378 pairs) | PASS | 100% valid, mean=0.13, std=0.10, CV=0.74 |
+| Sanity (same-target vs random) | PASS | Active pairs 0.18 vs random 0.05 (3.29x) |
+| Paper reproduction (Figure 6 compounds) | WARNING | BSI-Large gives lower absolute scores than group-specific models (expected) |
+| Wrapper validation (vs source repo) | PASS | 378 pairs match within 5.4e-7 |
+
+**Overall: PASS (9/10, 1 warning)**
+
+### Highlights
+
+- **Distribution analysis:** 378 compound pairs from the paper's test set. Scores range 0.02-0.53 with mean 0.13 and CV 0.74, showing good discrimination.
+
+- **Sanity check:** Compound pairs sharing the same ChEMBL protein target score 3.29x higher than random cross-target pairs, confirming the model captures bioactivity similarity.
+
+- **Paper reproduction:** The paper's Figure 6 uses group-specific BSI models (trained per protein family) which achieve scores 0.77-0.92. BSI-Large, being a general model, gives lower absolute scores but preserves directional correctness — same-target pairs consistently score higher than cross-target pairs.
+
+- **Wrapper validation:** The eos-template wrapper reproduces the original `evaluate_bsi_pairs.py` output exactly (max difference 5.4e-7 across 378 pairs).
+
+See [`test_report.json`](test_report.json) for the full validation report.
+
+## Usage
+
+```python
+# Input CSV format (pairwise — two SMILES columns)
+# smiles_1,smiles_2
+# CCOC(=O)C1=CC=CC=C1,C1=CC=C(C=C1)N
+# COC1=CC=CC=C1O,CC(C)OC
+
+python model/framework/code/main.py input.csv output.csv
 ```
-└── model
-    ├── checkpoints
-    │   └── .gitkeep
-    └── framework
-        ├── code
-        │   └── main.py
-        ├── examples
-        │   ├── run_input.csv
-        │   └── run_output.csv
-        ├── columns
-            └── run_columns.csv
-        └── run.sh
+
+## Dependencies
+
+```yaml
+python: "3.10"
+commands:
+    - ["pip", "numpy", "1.26.4"]
+    - ["pip", "pandas", "2.2.3"]
+    - ["pip", "torch", "2.5.1"]
+    - ["pip", "rdkit", "2022.9.5"]
+    - ["pip", "scikit-learn", "1.4.2"]
 ```
-- `model/checkpoints` contains checkpoint files required by the model. This directory is optional.
-- `model/framework` contains the driver code to load the model and run inferences from it. There are two files of interest here: `code/main.py`, and `run.sh`. The `code/main.py` file will contain the primary code to load model checkpoints and run the model, and can obviously refer to other files and packages contained within the `code` directory. The `run.sh` serves two purposes, it runs the code in the `main.py` file and also tells Ersilia that this model server will have a `run` API. The `run.sh` file is mandatory while the `code/main.py` is optional.
-- `model/framework/examples` contains an example input file (should have three smiles under the header smiles, this file can be generated with the `ersilia example` command) and the output of running the `run.sh` on the example inputs. Both `run_input.csv` and `run_output.csv` are mandatory.
-- `model/framework/columns` contains a template of the expected output columns, indicating their name, type (float, integer or string), direction (high, low, or empty) and a short one-sentence description. For more rules on how to fill in this file, check our [documentation](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/model-contribution/model-template). The `run_columns.csv` file is mandatory.
-
-### Metadata, Installation, and Other Templated Files
-
-In addition to adding the model checkpoints, the code for running them and the example and columns file, you'll need to edit the following:
-
-#### Model Dependencies
-
-Use the `install.yml` file to specify all the necessary dependencies required by the model to successfully run. This dependency configuration file has two top level keys:
-
-- The `python` field expects a string value denoting a python version (e.g. `"3.12"`)
-- The `commands` field expects a list of values, each of which is a list on its own, denoting the dependencies required by the model. Currently, `pip` and `conda` dependencies are supported using this syntax. 
-    - `pip` dependencies are expected to be one of the following lists:
-        -  Versioned dependency: three element lists in the format `["pip", "library", "version"]`
-        - Versioned dependency with additional flags: five element lists in the format `["pip", "library", "version", "--index-url", "URL"]`
-        - VCS-based dependency: four element lists in the format `['pip', 'URL']`. E.g `["pip", "git+https://github.com/bp-kelley/descriptastorus.git@9a190343bcd3cfd35142d378d952613bcac40797"]`.
-    - `conda` dependencies are expected to be four element lists in the format `["conda", "library", "version", "channel"]`, where channel is the conda channel to install the required library.
-    - For other `bash` commands, simply specify them as a oneliner string.
-
-The installation parser will raise an exception if dependencies are not specified in the aforementioned format.
-
-#### Model Metadata
-
-Model metadata should be specified within `metadata.yml`. A detailed explanation of what the metadata fields correspond to can be found [here](https://ersilia.gitbook.io/ersilia-book/ersilia-model-hub/incorporate-models/model-template). Note that some fields will be automatically updated upon model incorporation in Ersilia.
-
-#### Other Relevant Files
-
-* The `.dockerignore` file can be used to specify which files and folders should not be included in the eventual Docker image. By default, the `.git` folder is ignored. Other files to be ignored could include training data of the model, which will be available in GitHub and S3 but is not needed to run the model image. This is devised to reduce the final size of the images.
-
-* Consider adding a `.gitattributes` file if your model contains large files. In this file, you can specify which files should be handled with [Git LFS](https://git-lfs.com/).
-
-* As you work with the model, use the `.gitignore` file appropriately to ensure that only relevant files are included in the model repository.
-
-* As mentioned above, the `README.md` file **should not be modified**. It will automatically be updated when the model is incorporated in the Ersilia Model Hub.
