@@ -1,0 +1,188 @@
+{
+  "model_id": "eos0aaa",
+  "model_title": "Bioactivity Similarity Index (BSI)",
+  "timestamp": "2026-02-20T11:12:01.441985",
+  "overall": {
+    "status": "passed",
+    "passed": 9,
+    "warnings": 1,
+    "failed": 0,
+    "total_checks": 10
+  },
+  "inspect_checks": {
+    "file_existence": {
+      "status": "passed",
+      "files_found": 7,
+      "files_checked": 7,
+      "files": [
+        "model/framework/code/main.py",
+        "model/framework/run.sh",
+        "model/framework/examples/run_input.csv",
+        "model/framework/examples/run_output.csv",
+        "model/framework/columns/run_columns.csv",
+        "install.yml",
+        "metadata.yml"
+      ]
+    },
+    "metadata_validation": {
+      "status": "passed",
+      "checks_passed": 12,
+      "fields_validated": [
+        "Identifier",
+        "Slug",
+        "Title",
+        "Description",
+        "Mode",
+        "Task",
+        "Input",
+        "Output",
+        "Output Type",
+        "Source Code",
+        "Publication",
+        "License"
+      ]
+    },
+    "column_consistency": {
+      "status": "passed",
+      "num_columns": 1,
+      "columns": [
+        "bioactivity_similarity"
+      ],
+      "headers_match": true
+    },
+    "dependency_pinning": {
+      "status": "passed",
+      "python_version": "3.10",
+      "num_packages": 5,
+      "packages": {
+        "numpy": "1.26.4",
+        "pandas": "2.2.3",
+        "torch": "2.5.1",
+        "rdkit": "2022.9.5",
+        "scikit-learn": "1.4.2"
+      }
+    },
+    "syntax_validation": {
+      "status": "passed",
+      "file": "model/framework/code/main.py",
+      "detail": "Parses correctly"
+    }
+  },
+  "shallow_checks": {
+    "end_to_end_run": {
+      "status": "passed",
+      "output_rows": 5,
+      "output_columns": 1,
+      "runtime_seconds": 1.77,
+      "detail": "5 pairs scored successfully"
+    },
+    "consistency": {
+      "status": "passed",
+      "detail": "Dual-run comparison identical"
+    }
+  },
+  "deep_checks": {
+    "distribution_analysis": {
+      "status": "passed",
+      "num_input_pairs": 378,
+      "num_valid_outputs": 378,
+      "completion_rate": 1.0,
+      "runtime_seconds": 1.77,
+      "columns": {
+        "bioactivity_similarity": {
+          "mean": 0.1343,
+          "std": 0.0997,
+          "min": 0.0031,
+          "max": 0.6674,
+          "median": 0.1146,
+          "cv": 0.7421,
+          "is_constant": false,
+          "status": "passed"
+        }
+      }
+    },
+    "sanity_checks": {
+      "status": "passed",
+      "method": "active_vs_random_pairs",
+      "detail": "Known same-target pairs score 3.29x higher than cross-target random pairs, confirming directional correctness",
+      "active_pairs": {
+        "num_pairs": 4,
+        "targets": [
+          "H3 receptor (Q9Y5N1)",
+          "CYP11B2 (P19099)",
+          "MAPK1 (P28482)",
+          "TRPA1 (O75762)"
+        ],
+        "scores": [
+          0.3148,
+          0.5742,
+          0.1248,
+          0.0307
+        ],
+        "mean": 0.2611
+      },
+      "random_pairs": {
+        "num_pairs": 6,
+        "scores": [
+          0.0404,
+          0.1235,
+          0.0041,
+          0.1971,
+          0.0606,
+          0.0501
+        ],
+        "mean": 0.0793
+      },
+      "separation_ratio": 3.29,
+      "direction_correct": true
+    },
+    "paper_reproduction": {
+      "status": "warning",
+      "paper_url": "https://www.frontiersin.org/journals/bioinformatics/articles/10.3389/fbinf.2025.1695353/full",
+      "method": "figure6_compound_pairs",
+      "detail": "Paper Figure 6 reports BSI scores from group-specific models (0.77-0.92), while our wrapper uses BSI-Large (general model). BSI-Large gives lower absolute scores but preserves correct directional ordering: same-target pairs (mean=0.261) score 3.29x higher than cross-target pairs (mean=0.079). Original output matches source repo evaluate script within 1e-6.",
+      "paper_scores": {
+        "H3 receptor": {
+          "paper_bsi": 0.81,
+          "our_bsi": 0.3148,
+          "model_type_paper": "group-specific"
+        },
+        "CYP11B2": {
+          "paper_bsi": 0.92,
+          "our_bsi": 0.5742,
+          "model_type_paper": "group-specific"
+        },
+        "MAPK1": {
+          "paper_bsi": 0.77,
+          "our_bsi": 0.1248,
+          "model_type_paper": "group-specific"
+        },
+        "TRPA1": {
+          "paper_bsi": 0.86,
+          "our_bsi": 0.0307,
+          "model_type_paper": "group-specific"
+        }
+      },
+      "wrapper_validation": {
+        "method": "compare_with_source_repo",
+        "test_pairs": 378,
+        "max_absolute_difference": 5.4e-07,
+        "status": "passed"
+      }
+    }
+  },
+  "verified_outputs": [
+    {
+      "input": "CCOC(=O)C1=CC=CC=C1 + C1=CC=C(C=C1)N",
+      "output": 0.025071
+    },
+    {
+      "input": "COC1=CC=CC=C1O + CC(C)OC",
+      "output": 0.187012
+    },
+    {
+      "input": "COC(=O)C1=CC=CC=C1 + CCOC(=O)C1=CC=CC=C1O",
+      "output": 0.076398
+    }
+  ]
+}

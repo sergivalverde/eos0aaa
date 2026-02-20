@@ -1,41 +1,37 @@
 Identifier: eos0aaa
-Slug: template-model
-Status: In progress
-Title: This is a template model
-Description: |
-  This is a description of the template model.
-  You can use multiple lines in this description.
-Deployment:
-  - Local
-  - Online
-Source: Local, Online
-Source Type: Internal, Replicated, External
-Task: Annotation, Representation, Sampling
-Subtask: Property calculation or prediction, Activity prediction, Featurization, Projection, Similarity search, Generation
-Input: 
-  - Compound
-Input Dimension: 1
-Output: 
-  - Value
+Slug: bioactivity-similarity-index
+Title: Bioactivity Similarity Index (BSI)
+Description: >-
+  Predicts whether two compounds share similar bioactivity profiles based on
+  their binding behavior to protein targets. The model uses ECFP4 fingerprints
+  (256-bit Morgan radius 2) summed for compound pairs, fed through a deep neural
+  network trained on ChEMBL-derived active-active (similar) and active-decoy
+  (dissimilar) pairs with Tanimoto filtering. Outputs a score between 0
+  (dissimilar binding) and 1 (similar binding).
+Mode: Pretrained
+Task:
+  - Pairwise similarity prediction
+Input:
+  - Compound pair
+Input Dimension: 2
+Input Shape: Pair
+Output:
   - Score
-  - Compound
-  - Text
+Output Type: Float
 Output Dimension: 1
-Output Consistency: Fixed, Variable
-Interpretation: |
-  The output of this template model should be interpreted like this.
-Tag:
-  - Tag 1
-  - Tag 2
-  - Tag 3
+Output Shape: Single
+Interpretation: >-
+  Higher scores indicate that the two compounds are more likely to share
+  bioactivity profiles (i.e., bind similar protein targets). The model was
+  trained with a Tanimoto threshold of 0.40 to avoid trivially similar pairs.
+Tags:
+  - Bioactivity
+  - Similarity
+  - Target prediction
+  - Pairwise
+  - Drug discovery
 Biomedical Area:
-  - Biomedical Area 1
-  - Biomedical Area 2
-Target Organism:
-  - Target Organism 1
-  - Target Organism 2
-Publication Type: Peer reviewed, Preprint, Other
-Publication Year: 2025
-Publication: https://example.com
-Source Code: https://example.com
-License: GPL-3.0-or-later, MIT, Apache-2.0...
+  - Drug discovery
+Source Code: https://github.com/gschottlender/bioactivity-similarity-index
+Publication: https://www.frontiersin.org/journals/bioinformatics/articles/10.3389/fbinf.2025.1695353/full
+License: MIT

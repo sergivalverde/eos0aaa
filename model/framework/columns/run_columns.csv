@@ -1,1 +1,2 @@
-name,type,direction,description
+column_name,type,direction,description
+bioactivity_similarity,float,high,"Predicted bioactivity similarity between two compounds (0=dissimilar, 1=similar binding profile)"
